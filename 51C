@@ -38,48 +38,45 @@ void jinwei()
 
 	 if(sec1==9)
 		{
-				sec1=0;
+			sec1=0;
 				
 			if(sec2==5)
 				{
-						sec2=0;
-					 	if(min1==9)
-						{			
-							min1=0;
-							  if(min2==5)
-								{
-											min2=0;
-										if(shi2==2&&shi1==3)
-													{
-															shi1=0;
-															shi2=0;
-													}
-											else if(shi1==9)
-													{
-															shi1=0;
-														
-										
-														if(shi2==2)
-															shi2=0;
-														else 
-															shi2++;
-												
-													}
-											else 
-																shi1++;
-											}
-											else 
-													min2++;
+					sec2=0;
+					 if(min1==9)
+					{			
+						min1=0;
+						if(min2==5)
+						{
+							min2=0;
+							if(shi2==2&&shi1==3)
+						{
+							shi1=0;
+							shi2=0;
 						}
-								else 
-										min1++;
-								}
-			else
-						sec2++;
+						else if(shi1==9)
+							shi1=0;
+						if(shi2==2)
+							shi2=0;
+						else 
+							shi2++;
+												
+					}
+					else 
+						shi1++;
+				}
+				else 
+					min2++;
+			}
+			else 
+			min1++;
 		}
+		else
+			sec2++;
+	}
 	else 
 		sec1++;
-	}
+}
 
 
 void delayms(uint xms)
