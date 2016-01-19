@@ -514,7 +514,6 @@ void T0_time() interrupt 1
 		num1=0;
 		jinwei();
 	}
-	ES=1;
 }
 
 void ser() interrupt 4
