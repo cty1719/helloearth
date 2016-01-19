@@ -448,12 +448,15 @@ void keycmd()
 
 void clocknoise()
 {
-	noise=0;
-	delayms(50);
-	noise=1;
-	delayms(500);
-	noise=0;
-	delayms(50);
+	if(clock_flag==1)
+	{
+		noise=0;
+		delayms(50);
+		noise=1;
+		delayms(500);
+		noise=0;
+		delayms(50);
+	}
 }
 
 void clock()
