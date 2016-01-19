@@ -492,42 +492,19 @@ void  main()
 	  InitLcd1602();
 	while(1)
 	{	
-				if(flag==1)
-				{
-					
-					ES=0;
-//					TI=1;
-//					printf("%d%d : %d%d : %d%d\n",shi2,shi1,min2,min1,sec2,sec1);
-					for(j=0;j<3;j++)
-					{
-						SBUF=a[j];
-					
-						while(!TI);
-						TI=0;
-					}
-					ES=1;
-					flag=0;
-					getime();
-				}
-				
 		LcdShowStr(0,0,str2);	
 		LcdShowStr(0,1,str1);
-		cmd=matrix_keyboard();
+		matrix_keyboard();
 		keycmd();
-		
-//		LcdShowStr(datax,1,Nowdata);
-
 		if(clock_flag==1)
 		{
-				clock();
-				LcdShowStr(6,1,clockon);
+			clock();
+			LcdShowStr(6,1,clockon);
 		}
 		else
-				LcdShowStr(5,1,clockof);
+			LcdShowStr(5,1,clockof);
 		display(8,0);
 		cdisplay(8,1);
-//		LeftShow(0x1c);  内置左移滚屏；
-		
 	}
 }
 void T0_time() interrupt 1
@@ -538,20 +515,7 @@ void T0_time() interrupt 1
 	if(num1==20)
 	{
 		num1=0;
-//		sec1++;
 		jinwei();
-		
-		
-//					flag=1;
-					
-//						if(datax==4)
-//								{
-//										datax=0;
-//								}
-//						else
-//								datax++;
-//		InitLcd1602();
-		
 	}
 	ES=1;
 }
