@@ -1,0 +1,572 @@
+#include <reg52.h>
+#include <stdio.h>
+#include <intrins.h>
+
+#define uchar unsigned char
+#define uint unsigned int 
+
+#define matrix P2
+#define LCD1602_DB  P0    
+
+sbit noise=P1^7;        
+sbit LCD1602_RS = P1^0;
+sbit LCD1602_RW = P1^1;
+sbit LCD1602_EN = P1^2;	 
+
+uchar table[]={0,1,2,3,4,5,6,7,8,9};
+unsigned char str2[]="NOW time";
+unsigned char str1[]="Clock";
+unsigned char clockon[]="ON";
+unsigned char clockof[]=" OF";
+unsigned char open[]="Happy Every Day!";
+unsigned char name[]="Dear Chen Tianyu";
+uint shi1,min1,sec1,num1;
+uint shi2,min2,sec2,num2;
+uint cshi1,cshi2,cmin1,cmin2,csec1,csec2;
+uint a[3];
+uint i=0,j;
+uchar x,y,datax;
+uchar get_clock=0,clock_flag=0;
+uchar flag;
+uint cmd;
+float sec;
+static unsigned char key=17;
+
+
+void jinwei()
+{
+
+	 if(sec1==9)
+		{
+				sec1=0;
+				
+			if(sec2==5)
+				{
+						sec2=0;
+					 	if(min1==9)
+						{			
+							min1=0;
+							  if(min2==5)
+								{
+											min2=0;
+										if(shi2==2&&shi1==3)
+													{
+															shi1=0;
+															shi2=0;
+													}
+											else if(shi1==9)
+													{
+															shi1=0;
+														
+										
+														if(shi2==2)
+															shi2=0;
+														else 
+															shi2++;
+												
+													}
+											else 
+																shi1++;
+											}
+											else 
+													min2++;
+						}
+								else 
+										min1++;
+								}
+			else
+						sec2++;
+		}
+	else 
+		sec1++;
+	}
+
+
+void delayms(uint xms)
+{
+	uint i,j;
+	for(i=xms;i>0;i--)
+	{
+		for(j=110;j>0;j--);
+	}
+}
+
+unsigned int matrix_keyboard(){
+
+	uchar temp;
+	/*first*/
+	matrix=0xfe;
+	temp=matrix;
+	temp=temp&0xf0;
+	if(temp!=0xf0){
+		delayms(10);
+		temp=matrix;
+		ES=1;
+		temp=temp&0xf0;
+		if(temp!=0xf0){
+			temp=matrix;
+			switch(temp){
+				case 0xee:key=0;break;
+				case 0xde:key=1;break;
+				case 0xbe:key=2;break;
+				case 0x7e:key=3;break;
+			}	
+		while(temp!=0xf0){
+			temp=matrix;
+			temp=temp&0xf0;
+			}
+		}
+	}
+	/*second*/
+	matrix=0xfd;
+	temp=matrix;
+	temp=temp&0xf0;
+	if(temp!=0xf0){
+		delayms(10);
+		temp=matrix;
+		ES=1;
+		temp=temp&0xf0;
+		if(temp!=0xf0){
+			temp=matrix;
+			switch(temp){
+				case 0xed:key=4;break;
+				case 0xdd:key=5;break;
+				case 0xbd:key=6;break;
+				case 0x7d:key=7;break;
+			}	
+		while(temp!=0xf0){
+			temp=matrix;
+			temp=temp&0xf0;
+			}
+		}
+	}
+	/*thirty*/
+	matrix=0xfb;
+	temp=matrix;
+	temp=temp&0xf0;
+	if(temp!=0xf0){
+		delayms(10);
+		temp=matrix;
+		ES=1;
+		temp=temp&0xf0;
+		if(temp!=0xf0){
+			temp=matrix;
+			switch(temp){
+				case 0xeb:key=8;break;
+				case 0xdb:key=9;break;
+				case 0xbb:key=10;break;
+				case 0x7b:key=11;break;
+			}	
+		while(temp!=0xf0){
+			temp=matrix;
+			temp=temp&0xf0;
+			}
+		}
+	}
+	/*fourth*/
+	matrix=0xf7;
+	temp=matrix;
+	temp=temp&0xf0;
+	if(temp!=0xf0){
+		delayms(10);
+		temp=matrix;
+		ES=1;
+		temp=temp&0xf0;
+		if(temp!=0xf0){
+			temp=matrix;
+			switch(temp){
+				case 0xe7:key=12;break;
+				case 0xd7:key=13;break;
+				case 0xb7:key=14;break;
+				case 0x77:key=15;break;
+			}	
+		while(temp!=0xf0){
+			temp=matrix;
+			temp=temp&0xf0;
+			}
+		}
+	}
+
+	return key;
+	
+}
+
+
+
+void Timeinit0()
+{
+
+	TMOD=0x21;
+	TH0=(65536-45872)/256;
+	TL0=(65536-45872)%256;
+	TH1=0xfd;
+	TL1=0xfd;
+	ET0=1;
+	TR0=1;
+	TR1=1;
+	SM0=0;
+	SM1=1;
+	REN=1;
+	EA=1;
+	ES=1;
+}
+
+void Read_Busy()          
+{
+    unsigned char sta;    
+    LCD1602_DB = 0xff;
+    LCD1602_RS = 0;
+    LCD1602_RW = 1;
+    do
+    {
+        LCD1602_EN = 1;
+        sta = LCD1602_DB;
+        LCD1602_EN = 0;  
+    }while(sta & 0x80);
+}
+
+void Lcd1602_Write_Cmd(unsigned char cmd)    
+{
+    Read_Busy();
+    LCD1602_RS = 0;
+    LCD1602_RW = 0;
+    LCD1602_DB = cmd;
+    LCD1602_EN = 1;
+    LCD1602_EN = 0;    
+}
+
+void LcdSetCursor(unsigned char x,unsigned char y) 
+{
+    unsigned char addr;
+    if(y == 0)
+        addr = 0x00 + x;
+    else
+        addr = 0x40 + x;
+    
+    Lcd1602_Write_Cmd(addr|0x80);
+}
+
+void P0show(uchar x,uchar y,uchar dat)
+{
+		LcdSetCursor(x,y);   
+		 Read_Busy();
+      LCD1602_RS = 1;
+      LCD1602_RW = 0;
+      LCD1602_DB = (0x30+dat);
+      LCD1602_EN = 1;
+      LCD1602_EN = 0;
+	
+}
+
+void Lcd1602_Write_Data(unsigned char dat)   
+{
+      Read_Busy();
+      LCD1602_RS = 1;
+      LCD1602_RW = 0;
+      LCD1602_DB = dat;
+      LCD1602_EN = 1;
+      LCD1602_EN = 0;
+}
+
+
+void display(int Xposition,int Yposition)
+{
+				P0show(0+Xposition,0+Yposition,shi2);
+				P0show(1+Xposition,0+Yposition,shi1);
+				P0show(2+Xposition,0+Yposition,0x0a);
+				P0show(3+Xposition,0+Yposition,min2);
+				P0show(4+Xposition,0+Yposition,min1);
+				P0show(5+Xposition,0+Yposition,0x0a);
+				P0show(6+Xposition,0+Yposition,sec2) ;
+				P0show(7+Xposition,0+Yposition,sec1);
+}
+
+void cdisplay(int Xposition,int Yposition)
+{
+				P0show(0+Xposition,1+Yposition,cshi2);
+				P0show(1+Xposition,1+Yposition,cshi1);
+				P0show(2+Xposition,1+Yposition,0x0a);
+				P0show(3+Xposition,1+Yposition,cmin2);
+				P0show(4+Xposition,1+Yposition,cmin1);
+				P0show(5+Xposition,1+Yposition,0x0a);
+				P0show(6+Xposition,1+Yposition,csec2) ;
+				P0show(7+Xposition,1+Yposition,csec1);
+}
+void  InitLcd1602()        
+{
+    Lcd1602_Write_Cmd(0x38);   
+    Lcd1602_Write_Cmd(0x0c);
+    Lcd1602_Write_Cmd(0x06);
+    Lcd1602_Write_Cmd(0x01);    
+}
+
+void LcdShowStr(unsigned char x,unsigned char y,unsigned char *str)     
+{
+    LcdSetCursor(x,y);   
+    while(*str != '\0')
+    {
+        Lcd1602_Write_Data(*str++);
+		 delayms(5);
+    }
+
+}
+
+
+
+void keycmd()
+{
+	  switch(cmd)
+	{
+		case 0:
+			TR0=1;
+			ET0=1;
+			break;
+		case 1:
+			TR0=0;
+			ET0=0;
+			break;
+		case 5:
+				TR0=0;
+				ET0=0;
+				if(sec1==9)
+					sec1=0;
+				else 
+					sec1++;
+				key=1;
+				break;
+		case 4:
+				TR0=0;
+				ET0=0;
+				if(sec2==5)
+					sec2=0;
+				else 
+					sec2++;
+				key=1;
+				break;
+		case 9:
+				TR0=0;
+				ET0=0;
+				if(min1==9)
+					min1=0;
+				else 
+					min1++;
+				key=1;
+				break;
+		case 8:
+				TR0=0;
+				ET0=0;
+				if(min2==5)
+					min2=0;
+				else 
+					min2++;
+				key=1;
+				break;
+		case 13:
+				TR0=0;
+				ET0=0;
+				if(shi2==2&&shi1==3||shi1==9)
+					shi1=0;
+				else 
+					shi1++;
+				key=1;
+				break;
+		case 12:
+				TR0=0;
+				ET0=0;
+				if((shi1==4||shi1==5||shi1==6||shi1==7||shi1==8||shi1==9)&&shi2==1)
+					shi2=0;
+				else if(shi2==2)
+					shi2=0;
+				else 
+					shi2++;
+				key=1;
+				break;
+	
+		case 7:
+			
+				if(csec1==9)
+					csec1=0;
+				else 
+					csec1++;
+			key=17;
+				break;
+		case 6:
+		
+				if(csec2==5)
+					csec2=0;
+				else 
+					csec2++;
+				key=17;
+				break;
+		case 11:
+	
+				if(cmin1==9)
+					cmin1=0;
+				else 
+					cmin1++;
+				key=17;
+				break;
+		case 10:
+			
+				if(cmin2==5)
+					cmin2=0;
+				else 
+					cmin2++;
+				key=17;
+				break;
+		case 15:
+		
+				if(cshi2==2&&cshi1==3||cshi1==9)
+					cshi1=0;
+				else 
+					cshi1++;
+				key=17;
+				break;
+		case 14:
+			
+				if((cshi1==4||cshi1==5||cshi1==6||cshi1==7||cshi1==8||cshi1==9)&&cshi2==1)
+					cshi2=0;
+				else if(cshi2>=2)
+					cshi2=0;
+				else 
+					cshi2++;
+				key=17;
+				break;
+		case 2:
+				clock_flag=1;
+				key=0;
+			   break;
+		case 3:
+				clock_flag=0;
+				key=0;
+				noise=1;
+				break;
+
+	}
+	
+}
+
+void clocknoise()
+{
+	if(clock_flag==1)
+	{
+	noise=0;
+	delayms(50);
+	noise=1;
+	delayms(500);
+	noise=0;
+	delayms(50);
+
+	}
+}
+
+void clock()
+{
+	if(key==0||get_clock==1)
+	{
+		if(sec1==csec1&&sec2==csec2&&min1==cmin1&&min2==cmin2&&shi1==cshi1&&shi2==cshi2)
+			clocknoise();
+	
+	}
+}
+
+void  getime()
+{
+				sec1=a[2]%16;
+				sec2=a[2]/16;
+				min1=a[1]%16;
+				min2=a[1]/16;
+				shi1=a[0]%16;
+				shi2=a[0]/16;
+//			  clock_flag=1;
+//				get_clock=1;
+		
+}
+void  main()
+{
+		
+		InitLcd1602();
+		LcdShowStr(0,0,open);
+		LcdShowStr(0,1,name);
+		delayms(3124);
+		Timeinit0();
+	  InitLcd1602();
+	while(1)
+	{	
+				if(flag==1)
+				{
+					
+					ES=0;
+//					TI=1;
+//					printf("%d%d : %d%d : %d%d\n",shi2,shi1,min2,min1,sec2,sec1);
+					for(j=0;j<3;j++)
+					{
+						SBUF=a[j];
+					
+						while(!TI);
+						TI=0;
+					}
+					ES=1;
+					flag=0;
+					getime();
+				}
+				
+		LcdShowStr(0,0,str2);	
+		LcdShowStr(0,1,str1);
+		cmd=matrix_keyboard();
+		keycmd();
+		
+//		LcdShowStr(datax,1,Nowdata);
+
+		if(clock_flag==1)
+		{
+				clock();
+				LcdShowStr(6,1,clockon);
+		}
+		else
+				LcdShowStr(5,1,clockof);
+		display(8,0);
+		cdisplay(8,1);
+//		LeftShow(0x1c);  内置左移滚屏；
+		
+	}
+}
+void T0_time() interrupt 1
+{
+	TH0=(65536-45872)/256;
+	TL0=(65536-45872)%256;
+	num1++;
+	if(num1==20)
+	{
+		num1=0;
+//		sec1++;
+		jinwei();
+		
+		
+//					flag=1;
+					
+//						if(datax==4)
+//								{
+//										datax=0;
+//								}
+//						else
+//								datax++;
+//		InitLcd1602();
+		
+	}
+	ES=1;
+}
+
+void ser() interrupt 4
+{	
+	RI=0;	
+	a[i]=SBUF;
+	i++;	
+	if(i==3)
+	{
+		i=0;
+		flag=1;
+	}
+   
+}
+		
