@@ -448,21 +448,17 @@ void keycmd()
 
 void clocknoise()
 {
-	if(clock_flag==1)
-	{
 	noise=0;
 	delayms(50);
 	noise=1;
 	delayms(500);
 	noise=0;
 	delayms(50);
-
-	}
 }
 
 void clock()
 {
-	if(key==0||get_clock==1)
+	if(key==0||clock_flag==1)
 	{
 		if(sec1==csec1&&sec2==csec2&&min1==cmin1&&min2==cmin2&&shi1==cshi1&&shi2==cshi2)
 			clocknoise();
